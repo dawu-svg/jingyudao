@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="鲸鱼岛 - 陪伴你的教学生活">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#5b8c85">
+  <meta name="apple-mobile-web-app-title" content="鲸鱼岛">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='28' font-size='28'%3E🐋%3C/text%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='30' fill='%235b8c85'/%3E%3Ctext x='90' y='115' font-size='95' text-anchor='middle' fill='%23fff' font-family='sans-serif'%3E🐋%3C/text%3E%3C/svg%3E">
+  <title>鲸鱼岛</title>
+  <style>
+    /* ===== CSS Variables ===== */
+    :root {
+      --color-bg: #f5f0eb;
+      --color-surface: #ffffff;
+      --color-primary: #5b8c85;
+      --color-primary-light: #7db1aa;
+      --color-accent: #e8815e;
+      --color-text: #2c2c2c;
+      --color-text-secondary: #8a8a8a;
+      --color-text-light: #b0b0b0;
+      --color-border: #e8e3dd;
+      --color-hover: #f0ece6;
+      --color-shadow: rgba(0,0,0,0.06);
+      --color-mood-joy: #f9c74f;
+      --color-mood-neutral: #90be6d;
+      --color-mood-sad: #577590;
+      --color-mood-fire: #f94144;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 999px;
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --font-xs: 12px;
+      --font-sm: 14px;
+      --font-md: 16px;
+      --font-lg: 20px;
+      --font-xl: 24px;
+      --font-xxl: 28px;
+      --tab-height: 64px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* ===== Reset ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+      font-size: var(--font-md);
+      color: var(--color-text);
+      background: var(--color-bg);
+      height: 100%;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #tab-bar, .btn, .fab { user-select: none; -webkit-user-select: none; }
+
+    /* ===== App Shell ===== */
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      max-width: 430px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+    }
+    #content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: var(--space-md);
+    }
+    .page { display: none; padding: var(--space-md); }
+    .page.active { display: block; }
+
+    /* ===== Bottom Tab Bar ===== */
+    #tab-bar {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: var(--tab-height);
+      padding-bottom: var(--safe-bottom);
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border);
+      flex-shrink: 0;
+    }
+    .tab-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      border: none;
+      background: none;
+      color: var(--color-text-secondary);
+      font-size: var(--font-xs);
+      cursor: pointer;
+      padding: var(--space-sm) var(--space-lg);
+      transition: color 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tab-btn.active { color: var(--color-primary); }
+    .tab-btn .tab-icon { font-size: 22px; line-height: 1; }
+
+    /* ===== Card Base ===== */
+    .card {
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+      box-shadow: 0 1px 3px var(--color-shadow);
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-sm);
+    }
+    .card-title {
+      font-size: var(--font-lg);
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    /* ===== Common Elements ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-xs);
+      padding: var(--space-sm) var(--space-lg);
+      border-radius: var(--radius-full);
+      border: none;
+      font-size: var(--font-sm);
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .btn:active { transform: scale(0.97); }
+      .fab:active { transform: scale(0.92); }
+    }
+    .btn-primary { background: var(--color-primary); color: #fff; }
+    .btn-outline { background: none; border: 1px solid var(--color-primary); color: var(--color-primary); }
+    .btn-ghost { background: none; color: var(--color-primary); }
+    .btn-accent { background: var(--color-accent); color: #fff; }
+    .btn-sm { padding: 4px 12px; font-size: var(--font-xs); }
+    .btn-block { width: 100%; }
+
+    .input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      font-size: var(--font-md);
+      background: var(--color-surface);
+      color: var(--color-text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .input:focus { border-color: var(--color-primary); }
+    .input:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+    .btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+    .tab-btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+    textarea.input { resize: vertical; min-height: 80px; }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: var(--radius-full);
+      font-size: var(--font-xs);
+      background: var(--color-hover);
+      color: var(--color-text-secondary);
+    }
+    .tag.active { background: var(--color-primary); color: #fff; }
+
+    .divider {
+      height: 1px;
+      background: var(--color-border);
+      margin: var(--space-md) 0;
+    }
+
+    /* ===== Modal / Overlay ===== */
+    .overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .overlay-content {
+      background: var(--color-surface);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      padding: var(--space-lg);
+      width: 100%;
+      max-width: 430px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .overlay-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--color-border);
+      border-radius: 2px;
+      margin: 0 auto var(--space-md);
+    }
+
+    /* ===== Empty State ===== */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-xl) var(--space-md);
+      color: var(--color-text-light);
+    }
+    .empty-state .empty-icon { font-size: 48px; margin-bottom: var(--space-md); }
+
+    /* ===== FAB ===== */
+    .fab {
+      position: fixed;
+      bottom: calc(var(--tab-height) + var(--safe-bottom) + var(--space-lg));
+      right: calc(max((100vw - 430px) / 2, 0px) + var(--space-lg));
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--color-primary);
+      color: #fff;
+      font-size: 24px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(91,140,133,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+    /* ===== Help Tooltip ===== */
+    .help-btn {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      border: 1px solid var(--color-border);
+      background: none;
+      color: var(--color-text-light);
+      font-size: var(--font-xs);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .help-tooltip {
+      position: absolute;
+      top: 32px;
+      right: 0;
+      background: var(--color-text);
+      color: #fff;
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--radius-sm);
+      font-size: var(--font-xs);
+      max-width: 240px;
+      z-index: 10;
+      line-height: 1.5;
+    }
+
+    /* ===== Welcome/Onboarding ===== */
+    #onboarding {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--color-bg);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-xl);
+      text-align: center;
+    }
+    #onboarding .onboard-step { display: none; flex-direction: column; align-items: center; gap: var(--space-lg); }
+    #onboarding .onboard-step.active { display: flex; }
+    #onboarding .onboard-icon { font-size: 64px; }
+    #onboarding .onboard-title { font-size: var(--font-xl); font-weight: 700; }
+    #onboarding .onboard-desc { font-size: var(--font-sm); color: var(--color-text-secondary); line-height: 1.6; }
+
+    /* ===== Responsive: Small screens ===== */
+    @media (max-width: 360px) {
+      :root { --font-md: 15px; }
+      .card { padding: 12px; }
+    }
+
+    /* ===== Home Page ===== */
+    .greeting { font-size: var(--font-xxl); font-weight: 700; margin-bottom: 4px; }
+    .greeting-sub { font-size: var(--font-sm); color: var(--color-text-secondary); margin-bottom: var(--space-lg); }
+    .note-card {
+      background: linear-gradient(135deg, #e8f4f1, #dceeea);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-md);
+      position: relative;
+    }
+    .note-card .note-from { font-size: var(--font-xs); color: var(--color-text-light); margin-bottom: var(--space-sm); }
+    .note-card .note-body { font-size: var(--font-md); line-height: 1.6; margin-bottom: var(--space-sm); }
+    .note-card .note-reply-btn { font-size: var(--font-xs); color: var(--color-primary); }
+    .today-overview { display: flex; gap: var(--space-sm); margin-bottom: var(--space-md); }
+    .today-item {
+      flex: 1;
+      text-align: center;
+      padding: var(--space-sm);
+      background: var(--color-surface);
+      border-radius: var(--radius-sm);
+      box-shadow: 0 1px 2px var(--color-shadow);
+    }
+    .today-item .t-item-icon { font-size: 20px; }
+    .today-item .t-item-num { font-size: var(--font-lg); font-weight: 700; color: var(--color-primary); }
+    .today-item .t-item-label { font-size: var(--font-xs); color: var(--color-text-secondary); }
+
+    /* ===== Mood ===== */
+    .mood-strip {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-md) 0;
+      overflow-x: auto;
+    }
+    .mood-btn {
+      font-size: 36px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: var(--space-xs);
+      border-radius: var(--radius-full);
+      transition: transform 0.15s;
+    }
+    .mood-btn:active { transform: scale(1.2); }
+    .mood-btn.selected { background: var(--color-hover); }
+    .mood-history { display: flex; gap: 6px; flex-wrap: wrap; }
+    .mood-dot { font-size: 18px; opacity: 0.6; }
+    .mood-dot.today { opacity: 1; }
+
+    /* ===== Quick Actions ===== */
+    .quick-actions { display: flex; gap: var(--space-sm); margin-top: var(--space-sm); }
+    .qa-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: var(--space-sm);
+      border-radius: var(--radius-sm);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      font-size: var(--font-xs);
+      color: var(--color-text);
+      cursor: pointer;
+    }
+    .qa-btn .qa-icon { font-size: 22px; }
+
+    /* ===== Workbench ===== */
+    .wb-section { margin-bottom: var(--space-xl); }
+    .wb-section-title {
+      font-size: var(--font-sm);
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: var(--space-sm);
+      padding-left: 4px;
+    }
+    .script-item {
+      padding: var(--space-md);
+      border-bottom: 1px solid var(--color-border);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .script-item:active { background: var(--color-hover); }
+    .script-item .s-scenario { font-size: var(--font-md); font-weight: 500; }
+    .script-item .s-category { font-size: var(--font-xs); color: var(--color-text-light); margin-top: 4px; }
+    .script-filter {
+      display: flex;
+      gap: var(--space-sm);
+      overflow-x: auto;
+      padding-bottom: var(--space-sm);
+      margin-bottom: var(--space-sm);
+    }
+    .script-filter .tag { cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+
+    /* ===== Workbench Cards ===== */
+    .wb-card { cursor: pointer; }
+    .wb-card-meta { font-size: var(--font-xs); color: var(--color-text-light); margin-top: 4px; }
+
+    /* ===== Us Page ===== */
+    .love-note-item {
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      box-shadow: 0 1px 2px var(--color-shadow);
+    }
+    .love-note-meta { font-size: var(--font-xs); color: var(--color-text-light); margin-bottom: var(--space-xs); }
+    .love-note-body { line-height: 1.6; font-size: var(--font-md); }
+    .love-note-reply {
+      margin-top: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      background: var(--color-hover);
+      border-radius: var(--radius-sm);
+      font-size: var(--font-sm);
+    }
+    .anniversary-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .anniversary-days { font-size: var(--font-lg); font-weight: 700; color: var(--color-primary); }
+    .anniversary-title { font-size: var(--font-md); }
+    .anniversary-date { font-size: var(--font-xs); color: var(--color-text-light); }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;">鲸鱼岛</h1>
+    <div id="settings-fab" style="position:absolute;top:12px;right:12px;z-index:10;">
+      <button style="width:36px;height:36px;border-radius:50%;border:1px solid var(--color-border);background:var(--color-surface);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px var(--color-shadow);" onclick="App.openSettings()" aria-label="设置">⚙️</button>
+    </div>
+    <main id="content"></main>
+    <nav id="tab-bar" aria-label="主导航">
+      <button class="tab-btn active" data-page="home" aria-selected="true">
+        <span class="tab-icon">🏠</span><span>首页</span>
+      </button>
+      <button class="tab-btn" data-page="workbench" aria-selected="false">
+        <span class="tab-icon">📋</span><span>工作台</span>
+      </button>
+      <button class="tab-btn" data-page="us" aria-selected="false">
+        <span class="tab-icon">💌</span><span>我们</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Onboarding overlay (hidden by default) -->
+  <div id="onboarding" style="display:none;">
+    <div class="onboard-step active" data-step="1">
+      <div class="onboard-icon">🐋</div>
+      <div class="onboard-title">鲸鱼岛</div>
+      <div class="onboard-desc">陪伴你的教学生活</div>
+      <input type="text" id="onboard-nickname" class="input" placeholder="你的昵称" maxlength="20" style="text-align:center;" aria-label="你的昵称">
+      <button class="btn btn-primary" id="onboard-step1-next">下一步</button>
+    </div>
+    <div class="onboard-step" data-step="2">
+      <div class="onboard-icon">📱</div>
+      <div class="onboard-title">三个角落</div>
+      <div class="onboard-desc">
+        🏠 <strong>首页</strong> — 每日问候与小纸条<br>
+        📋 <strong>工作台</strong> — 教学与班级管理<br>
+        💌 <strong>我们</strong> — 专属的私密角落
+      </div>
+      <button class="btn btn-primary" id="onboard-step2-next">下一步</button>
+    </div>
+    <div class="onboard-step" data-step="3">
+      <div class="onboard-icon">📌</div>
+      <div class="onboard-title">添加到主屏幕</div>
+      <div class="onboard-desc" id="onboard-pwa-hint" style="font-size: var(--font-xs); text-align: left; line-height: 1.8;">
+        <strong>iPhone:</strong> 点击底部分享按钮 → 添加到主屏幕<br><br>
+        <strong>Android:</strong> 点击右上角菜单 → 添加到主屏幕
+      </div>
+      <button class="btn btn-outline" id="onboard-step3-later">稍后再说</button>
+    </div>
+    <div class="onboard-step" data-step="4">
+      <div class="onboard-icon">💭</div>
+      <div class="onboard-title">今天上班的心情怎么样？</div>
+      <div style="display: flex; gap: 16px; font-size: 40px;">
+        <button class="onboard-mood" data-mood="😊" style="border:none;background:none;cursor:pointer;padding:8px;">😊</button>
+        <button class="onboard-mood" data-mood="😐" style="border:none;background:none;cursor:pointer;padding:8px;">😐</button>
+        <button class="onboard-mood" data-mood="😫" style="border:none;background:none;cursor:pointer;padding:8px;">😫</button>
+        <button class="onboard-mood" data-mood="💪" style="border:none;background:none;cursor:pointer;padding:8px;">💪</button>
+      </div>
+      <button class="btn btn-primary" id="onboard-step4-done" disabled>开始使用</button>
+    </div>
+  </div>
+
+  <div id="overlay-container"></div>
+  <div id="toast-container" style="position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:300;" aria-live="polite" role="status"></div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+  <script>
+    // ===== Service Worker Registration =====
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+
+    // ===== Firebase Config =====
+    // 替换为你的 Firebase 配置 (Firebase Console → 项目设置 → 您的应用 → 配置)
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyA_Gv0jOvuchtp9kNYpjIt8ky0K8MIqp7s",
+      authDomain: "jingyudao.firebaseapp.com",
+      projectId: "jingyudao",
+      storageBucket: "jingyudao.firebasestorage.app",
+      messagingSenderId: "91055281112",
+      appId: "1:91055281112:web:8617a8d0bcf3e0118918ad"
+    };
+
+    let fb = null;
+    let db = null;
+    let _unsubNotes = null;
+    let _unsubAnniversaries = null;
+
+    // ===== SyncStore =====
+    const SyncStore = {
+      _roomCode: null,
+      _notesCache: null,
+      _anniversariesCache: null,
+      _initialized: false,
+      _initError: null,
+
+      getRoomCode() {
+        if (this._roomCode) return this._roomCode;
+        var settings = DataStore.getSettings();
+        this._roomCode = settings.roomCode || null;
+        return this._roomCode;
+      },
+
+      setRoomCode(code) {
+        this._roomCode = code;
+        DataStore.saveSettings({ roomCode: code });
+      },
+
+      isPaired() {
+        return !!this.getRoomCode();
+      },
+
+      initFirebase() {
+        if (this._initialized) return;
+        try {
+          if (!fb) fb = firebase.initializeApp(FIREBASE_CONFIG);
+          if (!db) {
+            db = firebase.firestore();
+            db.enablePersistence({ synchronizeTabs: true }).catch(function(err) {
+              if (err.code === 'failed-precondition') {
+                console.warn('SyncStore: multiple tabs open, offline persistence limited');
+              } else if (err.code === 'unimplemented') {
+                console.warn('SyncStore: browser does not support offline persistence');
+              }
+            });
+          }
+          this._initialized = true;
+          this._initError = null;
+        } catch (e) {
+          this._initError = e.message;
+          console.error('SyncStore: Firebase init failed', e);
+        }
+      },
+
+      _notesRef() {
+        if (!this.getRoomCode()) return null;
+        return db.collection('rooms').doc(this.getRoomCode()).collection('notes');
+      },
+
+      getNotes() {
+        return this._notesCache || [];
+      },
+
+      subscribeNotes() {
+        if (!this.isPaired() || !db) return;
+        var ref = this._notesRef();
+        if (!ref) return;
+        if (_unsubNotes) { _unsubNotes(); _unsubNotes = null; }
+
+        _unsubNotes = ref.orderBy('createdAt', 'desc').onSnapshot(
+          function(snapshot) {
+            SyncStore._notesCache = [];
+            snapshot.forEach(function(doc) {
+              SyncStore._notesCache.push(doc.data());
+            });
+            if (App.currentPage === 'home' || App.currentPage === 'us') {
+              App.render();
+            }
+          },
+          function(error) {
+            console.error('SyncStore: notes subscription error', error);
+          }
+        );
+      },
+
+      addNote(note) {
+        if (!this.isPaired() || !db) {
+          this._localAddNote(note);
+          return;
+        }
+        var ref = this._notesRef();
+        if (!ref) return;
+        note.id = uid();
+        note.createdAt = firebase.firestore.Timestamp.now();
+        ref.doc(note.id).set(note).catch(function(e) {
+          console.error('SyncStore: addNote failed', e);
+          App.showToast('纸条同步失败，请检查网络');
+        });
+      },
+
+      updateNote(id, updates) {
+        if (!this.isPaired() || !db) {
+          this._localUpdateNote(id, updates);
+          return;
+        }
+        var ref = this._notesRef();
+        if (!ref) return;
+        ref.doc(id).update(updates).catch(function(e) {
+          console.error('SyncStore: updateNote failed', e);
+        });
+      },
+
+      _localAddNote(note) {
+        var notes = DataStore._get(STORE_KEYS.notes) || [];
+        note.id = uid();
+        note.createdAt = new Date().toISOString();
+        notes.unshift(note);
+        DataStore._set(STORE_KEYS.notes, notes);
+        return note;
+      },
+
+      _localUpdateNote(id, updates) {
+        var notes = DataStore._get(STORE_KEYS.notes) || [];
+        var i = notes.findIndex(function(n) { return n.id === id; });
+        if (i >= 0) { notes[i] = Object.assign({}, notes[i], updates); DataStore._set(STORE_KEYS.notes, notes); }
+      },
+
+      _anniversariesRef() {
+        if (!this.getRoomCode()) return null;
+        return db.collection('rooms').doc(this.getRoomCode()).collection('anniversaries');
+      },
+
+      getAnniversaries() {
+        return this._anniversariesCache || [];
+      },
+
+      subscribeAnniversaries() {
+        if (!this.isPaired() || !db) return;
+        var ref = this._anniversariesRef();
+        if (!ref) return;
+        if (_unsubAnniversaries) { _unsubAnniversaries(); _unsubAnniversaries = null; }
+
+        _unsubAnniversaries = ref.orderBy('createdAt', 'desc').onSnapshot(
+          function(snapshot) {
+            SyncStore._anniversariesCache = [];
+            snapshot.forEach(function(doc) {
+              SyncStore._anniversariesCache.push(doc.data());
+            });
+            if (App.currentPage === 'us') App.render();
+          },
+          function(error) {
+            console.error('SyncStore: anniversaries subscription error', error);
+          }
+        );
+      },
+
+      addAnniversary(a) {
+        if (!this.isPaired() || !db) {
+          this._localAddAnniversary(a);
+          return;
+        }
+        var ref = this._anniversariesRef();
+        if (!ref) return;
+        a.id = uid();
+        a.createdAt = firebase.firestore.Timestamp.now();
+        ref.doc(a.id).set(a).catch(function(e) {
+          console.error('SyncStore: addAnniversary failed', e);
+          App.showToast('纪念日同步失败');
+        });
+      },
+
+      deleteAnniversary(id) {
+        if (!this.isPaired() || !db) {
+          this._localDeleteAnniversary(id);
+          return;
+        }
+        var ref = this._anniversariesRef();
+        if (!ref) return;
+        ref.doc(id).delete().catch(function(e) {
+          console.error('SyncStore: deleteAnniversary failed', e);
+        });
+      },
+
+      _localAddAnniversary(a) {
+        var anns = DataStore._get(STORE_KEYS.anniversaries) || [];
+        a.id = uid();
+        anns.unshift(a);
+        DataStore._set(STORE_KEYS.anniversaries, anns);
+        return a;
+      },
+
+      _localDeleteAnniversary(id) {
+        var anns = (DataStore._get(STORE_KEYS.anniversaries) || []).filter(function(a) { return a.id !== id; });
+        DataStore._set(STORE_KEYS.anniversaries, anns);
+      },
+
+      migrateLocalToCloud() {
+        if (!this.isPaired() || !db) return;
+        var localNotes = DataStore._get(STORE_KEYS.notes) || [];
+        var localAnniversaries = DataStore._get(STORE_KEYS.anniversaries) || [];
+        var notesRef = this._notesRef();
+        var annRef = this._anniversariesRef();
+        if (!notesRef || !annRef) return;
+
+        localNotes.forEach(function(n) {
+          if (typeof n.createdAt === 'string') {
+            var doc = Object.assign({}, n);
+            doc.createdAt = firebase.firestore.Timestamp.fromDate(new Date(doc.createdAt));
+            notesRef.doc(doc.id).set(doc, { merge: true }).catch(function() {});
+          }
+        });
+
+        localAnniversaries.forEach(function(a) {
+          if (typeof a.createdAt === 'string') {
+            var doc = Object.assign({}, a);
+            doc.createdAt = firebase.firestore.Timestamp.fromDate(new Date(doc.createdAt || 0));
+            annRef.doc(doc.id).set(doc, { merge: true }).catch(function() {});
+          }
+        });
+      },
+
+      startSyncing() {
+        this.initFirebase();
+        if (!this.isPaired()) return;
+        this.migrateLocalToCloud();
+        this.subscribeNotes();
+        this.subscribeAnniversaries();
+      }
+    };
+
+    // ===== DataStore =====
+    const STORE_KEYS = {
+      settings: 'jd_settings',
+      notes: 'jd_love_notes',
+      moods: 'jd_moods',
+      scripts: 'jd_parent_scripts',
+      commLogs: 'jd_comm_logs',
+      lessonNotes: 'jd_lesson_notes',
+      anniversaries: 'jd_anniversaries',
+      weeklyPlan: 'jd_weekly_plan',
+      quickActions: 'jd_quick_actions'
+    };
+
+    function uid() { return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8); }
+
+    const DataStore = {
+      _get(key) {
+        try { return JSON.parse(localStorage.getItem(key)) || null; }
+        catch { return null; }
+      },
+      _set(key, value) {
+        try {
+          localStorage.setItem(key, JSON.stringify(value));
+        } catch (e) {
+          console.warn('DataStore: failed to write', key, e);
+        }
+      },
+
+      // Settings
+      getSettings() { return this._get(STORE_KEYS.settings) || { nickname: '', onboarded: false, quickActions: ['scripts','commlog','lesson'] }; },
+      saveSettings(s) { this._set(STORE_KEYS.settings, { ...this.getSettings(), ...s }); },
+
+      // Love notes — { id, from, content, image, date, reply, createdAt }
+      // 已配对时走 Firestore 同步；未配对时走 localStorage
+      getNotes() {
+        if (SyncStore.isPaired()) return SyncStore.getNotes();
+        return this._get(STORE_KEYS.notes) || [];
+      },
+      addNote(note) {
+        if (SyncStore.isPaired()) { SyncStore.addNote(note); return note; }
+        const notes = this._get(STORE_KEYS.notes) || [];
+        note.id = uid(); note.createdAt = new Date().toISOString();
+        notes.unshift(note); this._set(STORE_KEYS.notes, notes); return note;
+      },
+      updateNote(id, updates) {
+        if (SyncStore.isPaired()) { SyncStore.updateNote(id, updates); return; }
+        const notes = this._get(STORE_KEYS.notes) || [];
+        const i = notes.findIndex(function(n) { return n.id === id; });
+        if (i >= 0) { notes[i] = Object.assign({}, notes[i], updates); this._set(STORE_KEYS.notes, notes); }
+      },
+
+      // Moods — { date, mood, note }
+      getMoods() { return this._get(STORE_KEYS.moods) || []; },
+      addMood(mood) { const moods = this.getMoods(); mood.id = uid(); mood.createdAt = new Date().toISOString(); moods.unshift(mood); if (moods.length > 365) moods.length = 365; this._set(STORE_KEYS.moods, moods); return mood; },
+
+      // Parent communication scripts — { id, category, scenario, template, tags }
+      getScripts() { return this._get(STORE_KEYS.scripts) || []; },
+      addScript(s) { const scripts = this.getScripts(); s.id = uid(); s.createdAt = new Date().toISOString(); scripts.unshift(s); this._set(STORE_KEYS.scripts, scripts); return s; },
+      updateScript(id, updates) { const scripts = this.getScripts(); const i = scripts.findIndex(s => s.id === id); if (i >= 0) { scripts[i] = { ...scripts[i], ...updates }; this._set(STORE_KEYS.scripts, scripts); } },
+      deleteScript(id) { const scripts = this.getScripts().filter(s => s.id !== id); this._set(STORE_KEYS.scripts, scripts); },
+
+      // Communication logs — { id, studentName, date, summary, followUp, followUpDone }
+      getCommLogs() { return this._get(STORE_KEYS.commLogs) || []; },
+      addCommLog(l) { const logs = this.getCommLogs(); l.id = uid(); l.createdAt = new Date().toISOString(); logs.unshift(l); this._set(STORE_KEYS.commLogs, logs); return l; },
+      updateCommLog(id, updates) { const logs = this.getCommLogs(); const i = logs.findIndex(l => l.id === id); if (i >= 0) { logs[i] = { ...logs[i], ...updates }; this._set(STORE_KEYS.commLogs, logs); } },
+      deleteCommLog(id) { const logs = this.getCommLogs().filter(l => l.id !== id); this._set(STORE_KEYS.commLogs, logs); },
+
+      // Lesson notes — { id, chapter, tags, content, images, createdAt, updatedAt }
+      getLessonNotes() { return this._get(STORE_KEYS.lessonNotes) || []; },
+      addLessonNote(n) { const notes = this.getLessonNotes(); n.id = uid(); n.createdAt = new Date().toISOString(); n.updatedAt = n.createdAt; notes.unshift(n); this._set(STORE_KEYS.lessonNotes, notes); return n; },
+      updateLessonNote(id, updates) { const notes = this.getLessonNotes(); const i = notes.findIndex(n => n.id === id); if (i >= 0) { notes[i] = { ...notes[i], ...updates, updatedAt: new Date().toISOString() }; this._set(STORE_KEYS.lessonNotes, notes); } },
+      deleteLessonNote(id) { const notes = this.getLessonNotes().filter(n => n.id !== id); this._set(STORE_KEYS.lessonNotes, notes); },
+
+      // Anniversaries — { id, title, date, type }
+      // 已配对时走 Firestore 同步；未配对时走 localStorage
+      getAnniversaries() {
+        if (SyncStore.isPaired()) return SyncStore.getAnniversaries();
+        return this._get(STORE_KEYS.anniversaries) || [];
+      },
+      addAnniversary(a) {
+        if (SyncStore.isPaired()) { SyncStore.addAnniversary(a); return a; }
+        const anns = this._get(STORE_KEYS.anniversaries) || [];
+        a.id = uid(); anns.unshift(a); this._set(STORE_KEYS.anniversaries, anns); return a;
+      },
+      deleteAnniversary(id) {
+        if (SyncStore.isPaired()) { SyncStore.deleteAnniversary(id); return; }
+        const anns = (this._get(STORE_KEYS.anniversaries) || []).filter(function(a) { return a.id !== id; });
+        this._set(STORE_KEYS.anniversaries, anns);
+      },
+
+      // Export / Import
+      exportAll() {
+        const data = {};
+        for (const [k, key] of Object.entries(STORE_KEYS)) { data[k] = this._get(key); }
+        // 导出时保留房间码，用于换机后恢复配对
+        data._roomCode = SyncStore.getRoomCode() || null;
+        return JSON.stringify(data, null, 2);
+      },
+      importAll(json) {
+        try {
+          const data = JSON.parse(json);
+          // Save backup before import
+          this._set('jd_backup', this.exportAll());
+          for (const [k, key] of Object.entries(STORE_KEYS)) {
+            if (data[k] !== undefined) this._set(key, data[k]);
+          }
+          // 恢复房间码并重新同步
+          if (data._roomCode) {
+            SyncStore.setRoomCode(data._roomCode);
+            SyncStore.startSyncing();
+          }
+          return true;
+        } catch { return false; }
+      }
+    };
+
+    // HTML escape utility
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    // JS-safe escape for onclick contexts (escapes backslash and single quote)
+    function escJs(s) { return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+
+    // Seed default parent scripts if empty
+    (function seedDefaults() {
+      const settings = DataStore.getSettings();
+      if (!settings.seededScripts) {
+        const defaults = [
+          { category: '成绩', scenario: '成绩下滑', template: '家长您好，最近注意到[学生姓名]在[学科]上有些波动，想和您约个时间一起聊聊，看看怎么帮孩子调整状态。', tags: ['成绩', '沟通'] },
+          { category: '成绩', scenario: '成绩进步', template: '家长您好，[学生姓名]最近在[学科]上进步明显，课堂表现也积极了许多，特此和您分享一下这个好消息！', tags: ['成绩', '表扬'] },
+          { category: '纪律', scenario: '迟到早退', template: '家长您好，最近发现[学生姓名]有几次迟到的情况，想了解一下是否家里有什么特殊情况？我们一起关注。', tags: ['纪律', '关心'] },
+          { category: '纪律', scenario: '课堂走神', template: '家长您好，[学生姓名]最近课堂上注意力时有分散，可能是休息不太好。建议保证充足睡眠，我们一起帮孩子调整。', tags: ['纪律', '关心'] },
+          { category: '心理', scenario: '情绪关注', template: '家长您好，最近感觉[学生姓名]情绪好像有些低落，不太爱说话。您在家有注意到什么吗？我们一起多关心。', tags: ['心理', '关心'] },
+          { category: '考试', scenario: '考前提醒', template: '家长您好，[日期]将进行[科目]考试，请提醒孩子合理安排复习时间。学习上有困难随时可以来找我。', tags: ['考试', '通知'] },
+          { category: '班级', scenario: '班级活动通知', template: '各位家长好，班级将于[日期]组织[活动]，详情如下：\n时间：[时间]\n地点：[地点]\n请确认孩子知晓。', tags: ['通知', '班级'] },
+          { category: '请假', scenario: '请假审批', template: '家长您好，关于[学生姓名]的请假申请已收到。请假期间落下的课程我会安排补上。', tags: ['请假', '审批'] },
+          { category: '手机', scenario: '手机管理', template: '家长您好，最近学校在严查手机管理，[学生姓名]在校期间请勿携带手机到教室，感谢配合。', tags: ['纪律', '手机'] },
+          { category: '早恋', scenario: '早恋关注', template: '家长您好，有些敏感话题想和您私下沟通一下。最近观察到[学生姓名]可能有些情感上的波动，想约您面谈，我们一起为孩子把关。', tags: ['心理', '敏感'] }
+        ];
+        defaults.forEach(s => DataStore.addScript(s));
+        DataStore.saveSettings({ seededScripts: true });
+      }
+    })();
+
+    // ===== App Router =====
+    const App = {
+      currentPage: 'home',
+
+      navigate(page) {
+        this.closeOverlay();
+        const validPages = ['home', 'workbench', 'us'];
+        if (!validPages.includes(page)) {
+          console.warn('App: invalid page', page);
+          page = 'home';
+        }
+        this.currentPage = page;
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.page === page);
+          btn.setAttribute('aria-selected', btn.dataset.page === page ? 'true' : 'false');
+        });
+        this.render();
+        document.getElementById('content').scrollTop = 0;
+      },
+
+      render() {
+        const content = document.getElementById('content');
+        try {
+          switch (this.currentPage) {
+            case 'home': content.innerHTML = renderHome(); break;
+            case 'workbench': content.innerHTML = renderWorkbench(); break;
+            case 'us': content.innerHTML = renderUs(); break;
+            default: content.innerHTML = renderHome(); break;
+          }
+        } catch (e) {
+          console.error('App: render error', e);
+          content.innerHTML = '<div class="page active"><p style="text-align:center;padding:40px;">出错了，请刷新重试</p></div>';
+        }
+        bindPageEvents();
+      },
+
+      showOverlay(html) {
+        const container = document.getElementById('overlay-container');
+        container.innerHTML = `<div class="overlay" id="current-overlay" role="dialog" aria-modal="true">
+          <div class="overlay-content"><div class="overlay-handle"></div>${html}</div>
+        </div>`;
+        document.getElementById('current-overlay').addEventListener('click', function(e) {
+          if (e.target === this) App.closeOverlay();
+        });
+        document.addEventListener('keydown', App._onOverlayKey);
+      },
+
+      closeOverlay() {
+        document.getElementById('overlay-container').innerHTML = '';
+        document.removeEventListener('keydown', App._onOverlayKey);
+      },
+
+      _onOverlayKey(e) {
+        if (e.key === 'Escape') App.closeOverlay();
+      },
+
+      showToast(msg, duration = 2000) {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.style.cssText = 'background:#2c2c2c;color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;margin-bottom:8px;transition:opacity 0.3s;opacity:1;';
+        toast.textContent = msg;
+        // Limit to 3 visible toasts
+        while (container.children.length >= 3) {
+          container.firstChild.remove();
+        }
+        container.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, duration);
+      },
+
+      init() {
+        // Tab bar click handler
+        document.getElementById('tab-bar').addEventListener('click', (e) => {
+          const btn = e.target.closest('.tab-btn');
+          if (btn) App.navigate(btn.dataset.page);
+        });
+
+        // 初始化 Firebase (无论是否配对都调用，启用离线缓存)
+        SyncStore.initFirebase();
+
+        // Check onboarding
+        const settings = DataStore.getSettings();
+        if (!settings.onboarded) {
+          App.showOnboarding();
+        } else {
+          App.navigate('home');
+        }
+
+        // 如果已配对，启动 Firestore 同步
+        if (SyncStore.isPaired()) {
+          SyncStore.startSyncing();
+        }
+
+        // PWA install prompt (after 30 seconds, once)
+        setTimeout(function() {
+          if (window.matchMedia('(display-mode: browser)').matches && !localStorage.getItem('jd_pwa_prompt_shown')) {
+            App.showToast('💡 点击右上角菜单 → 添加到主屏幕，体验更好', 5000);
+            localStorage.setItem('jd_pwa_prompt_shown', '1');
+          }
+        }, 30000);
+      },
+
+      showOnboarding() {
+        const ob = document.getElementById('onboarding');
+        ob.style.display = 'flex';
+        let currentStep = 1;
+
+        function showStep(n) {
+          document.querySelectorAll('#onboarding .onboard-step').forEach(s => s.classList.remove('active'));
+          const step = document.querySelector('#onboarding .onboard-step[data-step="' + n + '"]');
+          if (step) step.classList.add('active');
+          currentStep = n;
+        }
+
+        document.getElementById('onboard-step1-next').onclick = () => {
+          const nickname = document.getElementById('onboard-nickname').value.trim();
+          if (!nickname) { App.showToast('请输入昵称'); return; }
+          DataStore.saveSettings({ nickname });
+          showStep(2);
+        };
+
+        document.getElementById('onboard-step2-next').onclick = () => showStep(3);
+
+        document.getElementById('onboard-step3-later').onclick = () => showStep(4);
+
+        document.querySelectorAll('.onboard-mood').forEach(btn => {
+          btn.onclick = () => {
+            document.querySelectorAll('.onboard-mood').forEach(b => b.style.background = '');
+            btn.style.background = 'var(--color-hover)';
+            btn.style.borderRadius = '8px';
+            document.getElementById('onboard-step4-done').disabled = false;
+            document.getElementById('onboard-step4-done').dataset.mood = btn.dataset.mood;
+          };
+        });
+
+        document.getElementById('onboard-step4-done').onclick = () => {
+          const mood = document.getElementById('onboard-step4-done').dataset.mood;
+          if (mood) {
+            DataStore.addMood({ date: new Date().toISOString().slice(0, 10), mood, note: '' });
+          }
+          DataStore.saveSettings({ onboarded: true });
+          ob.style.display = 'none';
+          App.showToast('欢迎来到鲸鱼岛 🐋');
+          App.navigate('home');
+        };
+      },
+
+      checkMood(mood) {
+        const today = new Date().toISOString().slice(0, 10);
+        const moods = DataStore.getMoods();
+        if (moods.find(m => m.date === today)) return;
+
+        App.showOverlay(`
+          <div style="text-align:center;">
+            <div style="font-size:48px;margin-bottom:16px;">${mood}</div>
+            <div style="font-size:var(--font-lg);font-weight:600;margin-bottom:16px;">今天想说什么？</div>
+            <textarea id="mood-note-input" class="input" placeholder="写点什么（可选）" maxlength="200" style="margin-bottom:16px;"></textarea>
+            <button class="btn btn-primary btn-block" id="save-mood-btn">保存心情</button>
+          </div>
+        `);
+
+        document.getElementById('save-mood-btn').addEventListener('click', () => {
+          const note = document.getElementById('mood-note-input').value.trim();
+          DataStore.addMood({ date: today, mood, note });
+          App.closeOverlay();
+          App.showToast('心情已记录 ' + mood);
+          App.render();
+        });
+      },
+
+      replyToNote(noteId) {
+        App.showOverlay(`
+          <div>
+            <div style="font-size:var(--font-lg);font-weight:600;margin-bottom:12px;">回复小纸条</div>
+            <textarea id="reply-input" class="input" placeholder="写下你的回复..." maxlength="500" style="min-height:80px;margin-bottom:12px;"></textarea>
+            <button class="btn btn-primary btn-block" id="send-reply-btn">发送回复 💗</button>
+          </div>
+        `);
+        document.getElementById('send-reply-btn').addEventListener('click', () => {
+          const reply = document.getElementById('reply-input').value.trim();
+          if (reply) {
+            DataStore.updateNote(noteId, { reply });
+            App.closeOverlay();
+            App.showToast('回复已送达 💌');
+            App.render();
+          }
+        });
+      },
+
+      filterScripts(category) {
+        const scripts = DataStore.getScripts();
+        const filtered = category === 'all' ? scripts : scripts.filter(s => s.category === category);
+        document.getElementById('script-list').innerHTML = renderScriptList(filtered);
+        // Update active tag
+        document.querySelectorAll('#script-category-filter .tag').forEach(t => {
+          t.classList.toggle('active', t.textContent === category || (category === 'all' && t.textContent === '全部'));
+        });
+      },
+
+      viewScript(id) {
+        const script = DataStore.getScripts().find(s => s.id === id);
+        if (!script) return;
+        App.showOverlay(`
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+              <span class="tag">${esc(script.category)}</span>
+              ${script.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}
+            </div>
+            <div style="font-size:var(--font-lg);font-weight:600;margin-bottom:12px;">${esc(script.scenario)}</div>
+            <div style="background:var(--color-hover);padding:14px;border-radius:8px;font-size:var(--font-sm);line-height:1.7;margin-bottom:16px;white-space:pre-wrap;">${esc(script.template)}</div>
+            <button class="btn btn-primary btn-block" onclick="App.copyScript('${script.id}')">📋 一键复制到剪贴板</button>
+          </div>
+        `);
+      },
+
+      copyScript(id) {
+        const script = DataStore.getScripts().find(s => s.id === id);
+        if (!script) return;
+        if (!navigator.clipboard) {
+          App.showToast('请长按选中文字后复制');
+          return;
+        }
+        navigator.clipboard.writeText(script.template).then(() => {
+          App.closeOverlay();
+          App.showToast('已复制，可以粘贴到微信了 ✓');
+        }).catch(() => {
+          App.showToast('请长按选中文字后复制');
+        });
+      },
+
+      addScript() {
+        App.showOverlay(`
+          <div>
+            <div style="font-size:var(--font-lg);font-weight:600;margin-bottom:16px;">新增话术模板</div>
+            <input id="new-script-scenario" class="input" placeholder="场景名称 (如:成绩下滑)" style="margin-bottom:8px;">
+            <input id="new-script-category" class="input" placeholder="分类 (如:成绩、纪律、心理)" style="margin-bottom:8px;">
+            <textarea id="new-script-template" class="input" placeholder="话术内容...&#10;用 [学生姓名] 作为占位符" style="margin-bottom:8px;min-height:100px;"></textarea>
+            <input id="new-script-tags" class="input" placeholder="标签，用逗号分隔 (如:关心,沟通)" style="margin-bottom:16px;">
+            <button class="btn btn-primary btn-block" id="save-script-btn">保存</button>
+          </div>
+        `);
+        document.getElementById('save-script-btn').addEventListener('click', () => {
+          const scenario = document.getElementById('new-script-scenario').value.trim();
+          const category = document.getElementById('new-script-category').value.trim();
+          const template = document.getElementById('new-script-template').value.trim();
+          const tags = document.getElementById('new-script-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+          if (!scenario || !template) { App.showToast('请填写场景名称和话术内容'); return; }
+          DataStore.addScript({ category: category || '其他', scenario, template, tags });
+          App.closeOverlay();
+          App.render();
+          App.showToast('话术模板已添加 ✓');
+        });
+      },
+      addCommLog() {
+        App.showOverlay(`
+          <div>
+            <div style="font-size:var(--font-lg);font-weight:600;margin-bottom:16px;">记录沟通</div>
+            <input id="new-commlog-student" class="input" placeholder="学生姓名" style="margin-bottom:8px;">
+            <input id="new-commlog-date" class="input" type="date" value="${new Date().toISOString().slice(0,10)}" style="margin-bottom:8px;">
+            <textarea id="new-commlog-summary" class="input" placeholder="沟通摘要..." style="margin-bottom:8px;min-height:80px;"></textarea>
+            <input id="new-commlog-followup" class="input" placeholder="后续跟进事项（可选）" style="margin-bottom:16px;">
+            <button class="btn btn-primary btn-block" id="save-commlog-btn">保存</button>
+          </div>
+        `);
+        document.getElementById('save-commlog-btn').addEventListener('click', () => {
+          const studentName = document.getElementById('new-commlog-student').value.trim();
+          const date = document.getElementById('new-commlog-date').value;
+          const summary = document.getElementById('new-commlog-summary').value.trim();
+          const followUp = document.getElementById('new-commlog-followup').value.trim();
+          if (!studentName || !summary) { App.showToast('请填写学生姓名和沟通摘要'); return; }
+          DataStore.addCommLog({ studentName, date, summary, followUp, followUpDone: false });
+          App.closeOverlay();
+          App.render();
+          App.showToast('沟通记录已保存 ✓');
+        });
+      },
+
+      viewCommLog(id) {
+        const log = DataStore.getCommLogs().find(l => l.id === id);
+        if (!log) return;
+        App.showOverlay(`
+          <div>
+            <div style="font-size:var(--font-lg);font-weight:600;margin-bottom:4px;">${esc(log.studentName)}</div>
+            <div style="font-size:var(--font-xs);color:var(--color-text-light);margin-bottom:12px;">${esc(log.date)}</div>
+            <div style="line-height:1.6;margin-bottom:16px;white-space:pre-wrap;">${esc(log.summary)}</div>
+            ${log.followUp ? `<div style="background:var(--color-hover);padding:12px;border-radius:8px;margin-bottom:12px;"><strong>待跟进：</strong>${esc(log.followUp)} ${log.followUpDone ? '✅' : '⏳'}</div>` : ''}
+            ${!log.followUpDone && log.followUp ? `<button class="btn btn-outline btn-block btn-sm" onclick="DataStore.updateCommLog('${log.id}',{followUpDone:true});App.closeOverlay();App.render();">标记为已跟进</button>` : ''}
+            <button class="btn btn-ghost btn-block btn-sm" onclick="if(confirm('删除此记录？')){DataStore.deleteCommLog('${log.id}');App.closeOverlay();App.render();}" style="color:var(--color-accent);margin-top:8px;">删除</button>
+          </div>
+        `);
+      },
+
+      viewAllCommLogs() {
+        const logs = DataStore.getCommLogs();
+        App.showOverlay(`
+          <div>
+            <div style="font-size:var(--font-lg);font-weight:600;margin-bottom:16px;">全部沟通记录 (${logs.length})</div>
+            ${logs.length === 0 ? `<div class="empty-state"><div class="empty-icon">📭</div>暂无记录</div>` : ''}
+            ${logs.map(l => `
+              <div class="script-item" onclick="App.closeOverlay();App.viewCommLog('${l.id}');">
+                <div class="s-scenario">${esc(l.studentName)} — ${esc(l.date)}</div>
+                <div class="wb-card-meta">${esc(l.summary.slice(0, 50))}${l.summary.length > 50 ? '...' : ''}</div>
+              </div>
+            `).join('')}
+          </div>
+        `);
+      },
+
+      addLessonNote() {
+        App.showOverlay(`
+          <div>
+            <div style="font-size:var(--font-lg);font-weight:600;margin-bottom:16px;">新建备课笔记</div>
+            <input id="new-lesson-chapter" class="input" placeholder="章节 (如: 必修二·遗传与进化·第3章)" style="margin-bottom:8px;">
+            <input id="new-lesson-tags" class="input" placeholder="标签，逗号分隔 (如: 必修,实验,重点)" style="margin-bottom:8px;">
+            <textarea id="new-lesson-content" class="input" placeholder="备课内容..." style="margin-bottom:16px;min-height:120px;"></textarea>
+            <button class="btn btn-primary btn-block" id="save-lesson-btn">保存</button>
+          </div>
+        `);
+        document.getElementById('save-lesson-btn').addEventListener('click', () => {
+          const chapter = document.getElementById('new-lesson-chapter').value.trim();
+          const tags = document.getElementById('new-lesson-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+          const content = document.getElementById('new-lesson-content').value.trim();
+          if (!content) { App.showToast('请输入备课内容'); return; }
+          DataStore.addLessonNote({ chapter, tags, content, images: [] });
+          App.closeOverlay();
+          App.render();
+          App.showToast('备课笔记已保存 ✓');
+        });
+      },
+
+      viewLessonNote(id) {
+        const note = DataStore.getLessonNotes().find(n => n.id === id);
+        if (!note) return;
+        App.showOverlay(`
+          <div>
+            <div style="margin-bottom:8px;">
+              ${note.chapter ? `<span class="tag" style="margin-right:4px;">${esc(note.chapter)}</span>` : ''}
+              ${note.tags.map(t => `<span class="tag" style="margin-right:4px;">${esc(t)}</span>`).join('')}
+            </div>
+            <div style="font-size:var(--font-xs);color:var(--color-text-light);margin-bottom:12px;">
+              更新于 ${new Date(note.updatedAt).toLocaleString('zh-CN')}
+            </div>
+            <div style="line-height:1.7;white-space:pre-wrap;margin-bottom:16px;">${esc(note.content)}</div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-outline btn-block" onclick="App.editLessonNote('${note.id}')">编辑</button>
+              <button class="btn btn-ghost btn-block" onclick="if(confirm('删除此笔记？')){DataStore.deleteLessonNote('${note.id}');App.closeOverlay();App.render();}" style="color:var(--color-accent);">删除</button>
+            </div>
+          </div>
+        `);
+      },
+
+      editLessonNote(id) {
+        const note = DataStore.getLessonNotes().find(n => n.id === id);
+        if (!note) return;
+        App.closeOverlay();
+        App.showOverlay(`
+          <div>
+            <div style="font-size:var(--font-lg);font-weight:600;margin-bottom:16px;">编辑备课笔记</div>
+            <input id="edit-lesson-chapter" class="input" value="${esc(note.chapter || '')}" placeholder="章节" style="margin-bottom:8px;">
+            <input id="edit-lesson-tags" class="input" value="${esc(note.tags.join(','))}" placeholder="标签，逗号分隔" style="margin-bottom:8px;">
+            <textarea id="edit-lesson-content" class="input" style="margin-bottom:16px;min-height:120px;">${esc(note.content)}</textarea>
+            <button class="btn btn-primary btn-block" id="update-lesson-btn">更新</button>
+          </div>
+        `);
+        document.getElementById('update-lesson-btn').addEventListener('click', () => {
+          DataStore.updateLessonNote(id, {
+            chapter: document.getElementById('edit-lesson-chapter').value.trim(),
+            tags: document.getElementById('edit-lesson-tags').value.split(',').map(t => t.trim()).filter(Boolean),
+            content: document.getElementById('edit-lesson-content').value.trim()
+          });
+          App.closeOverlay();
+          App.render();
+          App.showToast('笔记已更新 ✓');
+        });
+      },
+
+      viewAllLessonNotes() {
+        const notes = DataStore.getLessonNotes();
+        App.showOverlay(`
+          <div>
+            <div style="font-size:var(--font-lg);font-weight:600;margin-bottom:16px;">全部备课笔记 (${notes.length})</div>
+            <input id="lesson-search" class="input" placeholder="搜索笔记..." style="margin-bottom:12px;" oninput="App.searchLessons()">
+            <div id="all-lesson-list">
+              ${notes.length === 0 ? `<div class="empty-state"><div class="empty-icon">📖</div>暂无笔记</div>` : notes.map(n => `
+                <div class="script-item" onclick="App.closeOverlay();App.viewLessonNote('${n.id}');">
+                  <div class="s-scenario">${esc(n.chapter || '未归类')}</div>
+                  <div class="wb-card-meta">${esc(n.content.slice(0, 60))}${n.content.length > 60 ? '...' : ''}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `);
+      },
+
+      searchLessons() {
+        const q = document.getElementById('lesson-search').value.toLowerCase();
+        const notes = DataStore.getLessonNotes().filter(n =>
+          n.content.toLowerCase().includes(q) ||
+          (n.chapter && n.chapter.toLowerCase().includes(q)) ||
+          n.tags.some(t => t.toLowerCase().includes(q))
+        );
+        document.getElementById('all-lesson-list').innerHTML = notes.length === 0
+          ? `<div class="empty-state"><div class="empty-icon">🔍</div>未找到匹配笔记</div>`
+          : notes.map(n => `
+              <div class="script-item" onclick="App.closeOverlay();App.viewLessonNote('${n.id}');">
+                <div class="s-scenario">${esc(n.chapter || '未归类')}</div>
+                <div class="wb-card-meta">${esc(n.content.slice(0, 60))}${n.content.length > 60 ? '...' : ''}</div>
+              </div>
+            `).join('');
+      },
+
+      addAnniversary() {
+        App.showOverlay(`
+          <div>
+            <div style="font-size:var(--font-lg);font-weight:600;margin-bottom:16px;">添加纪念日</div>
+            <input id="new-ann-title" class="input" placeholder="名称 (如: 在一起)" style="margin-bottom:8px;">
+            <input id="new-ann-date" class="input" type="date" style="margin-bottom:8px;">
+            <select id="new-ann-type" class="input" style="margin-bottom:16px;">
+              <option value="together">在一起</option>
+              <option value="birthday">生日</option>
+              <option value="other">其他纪念</option>
+            </select>
+            <button class="btn btn-primary btn-block" id="save-ann-btn">保存</button>
+          </div>
+        `);
+        document.getElementById('save-ann-btn').addEventListener('click', () => {
+          const title = document.getElementById('new-ann-title').value.trim();
+          const date = document.getElementById('new-ann-date').value;
+          const type = document.getElementById('new-ann-type').value;
+          if (!title || !date) { App.showToast('请填写名称和日期'); return; }
+          DataStore.addAnniversary({ title, date, type });
+          App.closeOverlay();
+          App.render();
+          App.showToast('纪念日已添加 ✓');
+        });
+      },
+
+      _longPressTimer: null,
+
+      startLongPress(e) {
+        this._longPressTimer = setTimeout(() => {
+          this.openDeliveryPanel();
+        }, 3000);
+      },
+
+      cancelLongPress() {
+        if (this._longPressTimer) {
+          clearTimeout(this._longPressTimer);
+          this._longPressTimer = null;
+        }
+      },
+
+      openDeliveryPanel() {
+        const today = new Date().toISOString().slice(0, 10);
+        App.showOverlay(`
+          <div>
+            <div style="text-align:center;margin-bottom:16px;">
+              <div style="font-size:32px;">🐋</div>
+              <div style="font-size:var(--font-xs);color:var(--color-text-light);">纸条投放站</div>
+            </div>
+            <textarea id="delivery-content" class="input" placeholder="写给她的话..." style="min-height:100px;margin-bottom:8px;"></textarea>
+            <input id="delivery-date" class="input" type="date" value="${today}" style="margin-bottom:8px;">
+            <div style="margin-bottom:8px;">
+              <label style="font-size:var(--font-sm);color:var(--color-text-secondary);">附图（可选）：</label>
+              <input type="file" accept="image/*" id="delivery-image" style="display:block;margin-top:4px;font-size:var(--font-sm);" onchange="App._previewDeliveryImage()">
+              <div style="font-size:11px;color:var(--color-text-light);margin-top:2px;">建议图片小于 500KB，大图会自动压缩</div>
+            </div>
+            <div id="delivery-preview" style="margin-bottom:12px;"></div>
+            <button class="btn btn-primary btn-block" id="deliver-btn">投递纸条 💌</button>
+            <div style="margin-top:12px;font-size:var(--font-xs);color:var(--color-text-light);line-height:1.6;">
+              💡 <strong>使用说明：</strong><br>
+              1. 写纸条内容，选择送达日期<br>
+              2. 纸条会在指定日期出现在首页<br>
+              3. 她可以点击回复，回复在此查看
+            </div>
+          </div>
+        `);
+
+        document.getElementById('deliver-btn').addEventListener('click', () => {
+          const content = document.getElementById('delivery-content').value.trim();
+          const date = document.getElementById('delivery-date').value;
+          const imageInput = document.getElementById('delivery-image');
+          if (!content) { App.showToast('写点什么吧'); return; }
+
+          const handleImage = (imageData) => {
+            DataStore.addNote({ from: 'me', content, date, image: imageData || null });
+            App.closeOverlay();
+            App.showToast('纸条已投递 💌');
+            App.render();
+          };
+
+          if (imageInput.files && imageInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = () => handleImage(reader.result);
+            reader.readAsDataURL(imageInput.files[0]);
+          } else {
+            handleImage(null);
+          }
+        });
+      },
+
+      _previewDeliveryImage() {
+        const file = document.getElementById('delivery-image').files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            document.getElementById('delivery-preview').innerHTML = '<img src="' + esc(reader.result) + '" style="max-width:100%;max-height:200px;border-radius:8px;" alt="预览">';
+          };
+          reader.readAsDataURL(file);
+        }
+      },
+
+      toggleHelp(moduleId) {
+        document.querySelectorAll('.help-tooltip').forEach(t => t.remove());
+
+        const helpTexts = {
+          'scripts': '📋 <strong>家长话术库</strong><br>预置了10个常见沟通场景模板。<br>点击标签筛选分类，点击条目查看完整话术，一键复制到剪贴板后粘贴到微信即可。',
+          'commlog': '📝 <strong>沟通日志</strong><br>每次和家长沟通后花30秒记录：学生名、摘要、后续事项。<br>长期积累，下次沟通前可快速回顾背景。',
+          'lesson': '📖 <strong>备课笔记</strong><br>按章节归档教学灵感。<br>建议使用标签系统：必修/选修、实验/理论，方便交叉检索。',
+          'love': '💌 <strong>悄悄话</strong><br>这是你们的慢速留言板，不是即时聊天。<br>每张纸条有时光感，慢慢写、慢慢等。'
+        };
+
+        const text = helpTexts[moduleId] || '暂无帮助信息';
+        const target = document.querySelector('[data-help="' + moduleId + '"]');
+        if (target) {
+          const tip = document.createElement('div');
+          tip.className = 'help-tooltip';
+          tip.innerHTML = text;
+          tip.onclick = function(e) { e.stopPropagation(); tip.remove(); };
+          target.parentElement.style.position = 'relative';
+          target.parentElement.appendChild(tip);
+          setTimeout(function() { tip.remove(); }, 8000);
+        }
+      },
+
+      openSettings() {
+        const settings = DataStore.getSettings();
+        App.showOverlay(`
+          <div>
+            <div style="font-size:var(--font-lg);font-weight:600;margin-bottom:16px;">⚙️ 设置</div>
+
+            <div style="margin-bottom:16px;">
+              <label style="font-size:var(--font-sm);color:var(--color-text-secondary);">昵称</label>
+              <input id="settings-nickname" class="input" value="${esc(settings.nickname)}" maxlength="20" style="margin-bottom:12px;">
+              <button class="btn btn-outline btn-block btn-sm" id="save-nickname-btn">保存昵称</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div style="margin-bottom:16px;">
+              <div style="font-size:var(--font-sm);font-weight:500;margin-bottom:8px;">🔗 双设备同步</div>
+              ${SyncStore.isPaired() ? `
+                <div style="background:var(--color-hover);padding:12px;border-radius:8px;margin-bottom:8px;">
+                  <div style="font-size:var(--font-xs);color:var(--color-text-secondary);">房间码</div>
+                  <div style="font-size:var(--font-xl);font-weight:700;letter-spacing:4px;color:var(--color-primary);">${esc(SyncStore.getRoomCode())}</div>
+                </div>
+                <div style="font-size:var(--font-xs);color:var(--color-text-light);margin-bottom:8px;">
+                  让对方在设置中输入此房间码即可配对
+                </div>
+                <button class="btn btn-ghost btn-block btn-sm" id="unpair-btn" style="color:var(--color-accent);">解除配对</button>
+              ` : `
+                <div style="margin-bottom:8px;">
+                  <button class="btn btn-primary btn-block btn-sm" id="create-room-btn">创建房间</button>
+                </div>
+                <div style="margin-bottom:8px;">
+                  <input id="join-room-input" class="input" placeholder="输入对方的 6 位房间码" maxlength="6" style="text-align:center;font-size:var(--font-lg);letter-spacing:4px;">
+                </div>
+                <button class="btn btn-outline btn-block btn-sm" id="join-room-btn">加入房间</button>
+              `}
+            </div>
+
+            <div class="divider"></div>
+
+            <div style="margin-bottom:16px;">
+              <div style="font-size:var(--font-sm);font-weight:500;margin-bottom:8px;">💾 数据备份</div>
+              <button class="btn btn-outline btn-block btn-sm" onclick="App.exportData()">导出数据 (JSON)</button>
+              <div style="margin-top:8px;">
+                <input type="file" accept=".json" id="import-file" style="display:none;" onchange="App.importData(event)">
+                <button class="btn btn-outline btn-block btn-sm" onclick="document.getElementById('import-file').click()">导入数据 (JSON)</button>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div style="margin-bottom:16px;">
+              <div style="font-size:var(--font-sm);font-weight:500;margin-bottom:8px;">📖 使用教程</div>
+              <button class="btn btn-outline btn-block btn-sm" onclick="App.replayOnboarding()">重新播放新手引导</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <button class="btn btn-ghost btn-block btn-sm" onclick="App.closeOverlay()" style="color:var(--color-text-secondary);">关闭</button>
+          </div>
+        `);
+
+        document.getElementById('save-nickname-btn').addEventListener('click', () => {
+          const nickname = document.getElementById('settings-nickname').value.trim();
+          if (!nickname) { App.showToast('昵称不能为空'); return; }
+          DataStore.saveSettings({ nickname });
+          App.closeOverlay();
+          App.render();
+          App.showToast('昵称已更新 ✓');
+        });
+
+        // 配对按钮 (仅在未配对时存在)
+        var createRoomBtn = document.getElementById('create-room-btn');
+        var joinRoomBtn = document.getElementById('join-room-btn');
+        var unpairBtn = document.getElementById('unpair-btn');
+
+        if (createRoomBtn) {
+          createRoomBtn.addEventListener('click', function() {
+            var code = String(Math.floor(100000 + Math.random() * 900000));
+            SyncStore.setRoomCode(code);
+            SyncStore.startSyncing();
+            App.closeOverlay();
+            App.showToast('房间已创建: ' + code + '  告诉对方这个码');
+            App.render();
+          });
+        }
+
+        if (joinRoomBtn) {
+          joinRoomBtn.addEventListener('click', function() {
+            var input = document.getElementById('join-room-input');
+            var code = input.value.trim();
+            if (code.length !== 6 || !/^\d{6}$/.test(code)) {
+              App.showToast('请输入 6 位数字房间码');
+              return;
+            }
+            SyncStore.setRoomCode(code);
+            SyncStore.startSyncing();
+            App.closeOverlay();
+            App.showToast('已加入房间 ' + code + '  纸条和纪念日现在会同步了');
+            App.render();
+          });
+        }
+
+        if (unpairBtn) {
+          unpairBtn.addEventListener('click', function() {
+            if (confirm('解除配对后，纸条和纪念日将不再同步。确定解除？')) {
+              if (_unsubNotes) { _unsubNotes(); _unsubNotes = null; }
+              if (_unsubAnniversaries) { _unsubAnniversaries(); _unsubAnniversaries = null; }
+              SyncStore.setRoomCode(null);
+              SyncStore._notesCache = null;
+              SyncStore._anniversariesCache = null;
+              App.closeOverlay();
+              App.showToast('已解除配对');
+              App.render();
+            }
+          });
+        }
+      },
+
+      exportData() {
+        const json = DataStore.exportAll();
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'jingyudao-backup-' + new Date().toISOString().slice(0,10) + '.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        App.showToast('数据已导出 ✓');
+      },
+
+      importData(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          if (confirm('导入数据将覆盖现有数据，确定继续？')) {
+            if (DataStore.importAll(ev.target.result)) {
+              App.showToast('数据已导入 ✓');
+              App.closeOverlay();
+              App.render();
+            } else {
+              App.showToast('导入失败：文件格式不正确');
+            }
+          }
+        };
+        reader.readAsText(file);
+      },
+
+      replayOnboarding() {
+        DataStore.saveSettings({ onboarded: false });
+        App.closeOverlay();
+        App.showOnboarding();
+      },
+    };
+
+    // Page render placeholders (implemented in subsequent tasks)
+    function renderHome() {
+      const settings = DataStore.getSettings();
+      const hour = new Date().getHours();
+      const greeting = hour < 12 ? '早上好' : hour < 18 ? '下午好' : '晚上好';
+      const name = settings.nickname || '老师';
+
+      // Today's note
+      const today = new Date().toISOString().slice(0, 10);
+      const notes = DataStore.getNotes();
+      const todayNote = notes.find(n => n.date === today);
+
+      // Today's overview (from weekly plan)
+      const weeklyPlan = DataStore._get(STORE_KEYS.weeklyPlan) || [];
+      const todayPlan = weeklyPlan.find(p => p.date === today);
+      const todayLessons = todayPlan ? todayPlan.periods.length : 0;
+      const todayEvents = todayPlan ? todayPlan.events.length : 0;
+      const todayTodos = todayPlan ? todayPlan.todos.filter(t => !t.done).length : 0;
+
+      // Mood history
+      const moods = DataStore.getMoods();
+      const last7Moods = moods.slice(0, 7);
+      const todayMood = moods.find(m => m.date === today);
+
+      // Quick actions
+      const quickActions = [
+        { id: 'scripts', icon: '💬', label: '话术库', page: 'workbench' },
+        { id: 'commlog', icon: '📝', label: '沟通日志', page: 'workbench' },
+        { id: 'lesson', icon: '📖', label: '备课笔记', page: 'workbench' },
+        { id: 'us', icon: '💌', label: '悄悄话', page: 'us' }
+      ];
+
+      return `
+        <div class="page active">
+          <div class="greeting">${greeting}，${esc(name)}</div>
+          <div class="greeting-sub">${new Date().toLocaleDateString('zh-CN', { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+
+          <!-- Today's Note -->
+          ${todayNote ? `
+          <div class="note-card">
+            <div class="note-from">💌 今天的纸条</div>
+            <div class="note-body">${esc(todayNote.content)}${todayNote.image ? '<br><img src="'+esc(todayNote.image)+'" style="max-width:100%;border-radius:8px;margin-top:8px;" alt="纸条附图">' : ''}</div>
+            ${!todayNote.reply ? `<button class="btn btn-ghost btn-sm note-reply-btn" onclick="App.replyToNote('${todayNote.id}')">回复一张纸条 →</button>`
+              : `<div style="font-size:13px;color:var(--color-text-light);">已回复 ❤️</div>`}
+          </div>
+          ` : ''}
+
+          <!-- Today's Overview -->
+          <div class="card">
+            <div class="card-header"><span class="card-title">今日速览</span></div>
+            <div class="today-overview">
+              <div class="today-item">
+                <div class="t-item-icon">📚</div>
+                <div class="t-item-num">${todayLessons}</div>
+                <div class="t-item-label">节课</div>
+              </div>
+              <div class="today-item">
+                <div class="t-item-icon">📅</div>
+                <div class="t-item-num">${todayEvents}</div>
+                <div class="t-item-label">事项</div>
+              </div>
+              <div class="today-item">
+                <div class="t-item-icon">✅</div>
+                <div class="t-item-num">${todayTodos}</div>
+                <div class="t-item-label">待办</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mood Check-in -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">今日心情</span>
+              <span style="font-size:var(--font-xs);color:var(--color-text-light);">${todayMood ? '今日已打卡' : '点击打卡'}</span>
+            </div>
+            <div class="mood-strip">
+              ${['😊','😐','😫','💪'].map(m => `
+                <button class="mood-btn ${todayMood && todayMood.mood === m ? 'selected' : ''}"
+                        onclick="App.checkMood('${m}')">${m}</button>
+              `).join('')}
+            </div>
+            ${last7Moods.length > 0 ? `
+            <div class="mood-history">
+              ${last7Moods.map(m => `<span class="mood-dot ${m.date === today ? 'today' : ''}">${m.mood}</span>`).join('')}
+            </div>` : ''}
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="quick-actions">
+            ${quickActions.map(qa => `
+              <button class="qa-btn" onclick="App.navigate('${qa.page}')">
+                <span class="qa-icon">${qa.icon}</span>${qa.label}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+    function renderWorkbench() {
+      return `
+        <div class="page active">
+          <!-- 班主任工作区 -->
+          <div class="wb-section">
+            <div class="wb-section-title">🏫 班主任工作区</div>
+            ${renderScriptLibraryCard()}
+            ${renderCommLogCard()}
+          </div>
+
+          <!-- 生物教学区 -->
+          <div class="wb-section">
+            <div class="wb-section-title">🧬 生物教学区</div>
+            ${renderLessonNotesCard()}
+          </div>
+
+          <!-- 开发者入口提示 -->
+          <div style="text-align:center;padding:var(--space-xl);color:var(--color-text-light);font-size:var(--font-xs);">
+            🐋 鲸鱼岛 · v1.0
+          </div>
+        </div>
+      `;
+    }
+
+    function renderScriptLibraryCard() {
+      const scripts = DataStore.getScripts();
+      const categories = [...new Set(scripts.map(s => s.category))];
+      return `
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">💬 家长话术库</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button class="help-btn" data-help="scripts" onclick="event.stopPropagation();App.toggleHelp('scripts')">?</button>
+              <span style="font-size:var(--font-xs);color:var(--color-text-light);">${scripts.length}条</span>
+            </div>
+          </div>
+          <div class="script-filter" id="script-category-filter">
+            <span class="tag active" onclick="App.filterScripts('all')">全部</span>
+            ${categories.map(c => `
+              <span class="tag" onclick="App.filterScripts('${escJs(c)}')">${esc(c)}</span>
+            `).join('')}
+          </div>
+          <div id="script-list">
+            ${renderScriptList(scripts)}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderScriptList(scripts) {
+      if (scripts.length === 0) return `<div class="empty-state"><div class="empty-icon">📭</div>暂无话术模板</div>`;
+      return scripts.map(s => `
+        <div class="script-item" onclick="App.viewScript('${s.id}')">
+          <div class="s-scenario">${esc(s.scenario)}</div>
+          <div style="display:flex;gap:4px;align-items:center;">
+            <span class="s-category">${esc(s.category)}</span>
+            ${s.tags.map(t => `<span style="font-size:11px;color:var(--color-text-light);">#${esc(t)}</span>`).join(' ')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Communication log
+    function renderCommLogCard() {
+      const logs = DataStore.getCommLogs().slice(0, 5);
+      return `
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📝 沟通日志</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button class="help-btn" data-help="commlog" onclick="event.stopPropagation();App.toggleHelp('commlog')">?</button>
+              <button class="btn btn-ghost btn-sm" onclick="App.viewAllCommLogs()">全部</button>
+            </div>
+          </div>
+          ${logs.length === 0 ? `<div class="empty-state"><div class="empty-icon">📭</div>暂无沟通记录</div>` : ''}
+          ${logs.map(l => `
+            <div class="script-item" onclick="App.viewCommLog('${l.id}')">
+              <div class="s-scenario">${esc(l.studentName)} — ${esc(l.summary.slice(0, 40))}${l.summary.length > 40 ? '...' : ''}</div>
+              <div class="wb-card-meta">${esc(l.date)} ${l.followUpDone ? '✅ 已跟进' : l.followUp ? '⏳ 待跟进' : ''}</div>
+            </div>
+          `).join('')}
+          <button class="btn btn-outline btn-block btn-sm" style="margin-top:8px;" onclick="App.addCommLog()">+ 记录本次沟通</button>
+        </div>
+      `;
+    }
+    function renderLessonNotesCard() {
+      const notes = DataStore.getLessonNotes().slice(0, 5);
+      return `
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📖 备课笔记</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button class="help-btn" data-help="lesson" onclick="event.stopPropagation();App.toggleHelp('lesson')">?</button>
+              <button class="btn btn-ghost btn-sm" onclick="App.viewAllLessonNotes()">全部</button>
+            </div>
+          </div>
+          ${notes.length === 0 ? `<div class="empty-state"><div class="empty-icon">📖</div>点击下方按钮开始记录备课灵感</div>` : ''}
+          ${notes.map(n => `
+            <div class="script-item" onclick="App.viewLessonNote('${n.id}')">
+              <div class="s-scenario">${esc(n.chapter || '未归类')} — ${esc(n.content.slice(0, 40))}${n.content.length > 40 ? '...' : ''}</div>
+              <div class="wb-card-meta">${n.tags.map(t => '#' + esc(t)).join(' ')} · ${new Date(n.updatedAt).toLocaleDateString('zh-CN')}</div>
+            </div>
+          `).join('')}
+          <button class="btn btn-outline btn-block btn-sm" style="margin-top:8px;" onclick="App.addLessonNote()">+ 新建备课笔记</button>
+        </div>
+      `;
+    }
+    function renderUs() {
+      const notes = DataStore.getNotes();
+      const anniversaries = DataStore.getAnniversaries();
+
+      return `
+        <div class="page active">
+          <!-- 悄悄话留言板 -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">💌 悄悄话</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <button class="help-btn" data-help="love" onclick="event.stopPropagation();App.toggleHelp('love')">?</button>
+                <span style="font-size:var(--font-xs);color:var(--color-text-light);">${notes.length}条</span>
+              </div>
+            </div>
+            ${notes.length === 0 ? `
+              <div class="empty-state">
+                <div class="empty-icon">💌</div>
+                <p>这里会有属于你们的悄悄话</p>
+              </div>
+            ` : notes.map(n => `
+              <div class="love-note-item">
+                <div class="love-note-meta">${n.from === 'me' ? '💙 他的纸条' : '💗 她的回复'} · ${new Date(n.date || n.createdAt).toLocaleDateString('zh-CN')}</div>
+                <div class="love-note-body">${esc(n.content)}</div>
+                ${n.reply ? `<div class="love-note-reply">💗 ${esc(n.reply)}</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+
+          <!-- 纪念日 -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">📅 纪念日</span>
+              <button class="btn btn-ghost btn-sm" onclick="App.addAnniversary()">+</button>
+            </div>
+            ${anniversaries.length === 0 ? `
+              <div class="empty-state">
+                <div class="empty-icon">📅</div>
+                <p>添加你们的纪念日</p>
+              </div>
+            ` : anniversaries.map(a => {
+              const target = new Date(a.date);
+              const today = new Date();
+              const diffDays = Math.floor((today - target) / 86400000);
+              const nextDays = Math.ceil((target - today) / 86400000);
+              const isPast = diffDays >= 0;
+              return `
+                <div class="anniversary-item">
+                  <div>
+                    <div class="anniversary-title">${esc(a.title)}</div>
+                    <div class="anniversary-date">${esc(a.date)} · ${a.type === 'together' ? '在一起' : a.type === 'birthday' ? '生日' : '纪念'}</div>
+                  </div>
+                  <div class="anniversary-days">${isPast ? `第 ${diffDays} 天` : `还有 ${nextDays} 天`}</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- Hidden trigger: long-press to access note delivery -->
+          <div style="height:60px;display:flex;align-items:center;justify-content:center;"
+               oncontextmenu="event.preventDefault();"
+               onpointerdown="App.startLongPress(event)" onpointerup="App.cancelLongPress(event)" onpointerleave="App.cancelLongPress(event)">
+            <span style="color:transparent;font-size:8px;user-select:none;">·</span>
+          </div>
+        </div>
+      `;
+    }
+    // Event handlers use inline onclick or event delegation on persistent containers (#app, #tab-bar).
+// If per-page event binding is needed later, add it here.
+function bindPageEvents() {
+      // Remove existing FAB
+      const existingFab = document.querySelector('.fab');
+      if (existingFab) existingFab.remove();
+
+      if (App.currentPage === 'workbench') {
+        const fab = document.createElement('button');
+        fab.className = 'fab';
+        fab.textContent = '+';
+        fab.onclick = () => App.addScript();
+        document.getElementById('app').appendChild(fab);
+      }
+    }
+
+    // Start app
+    document.addEventListener('DOMContentLoaded', () => App.init());
+  </script>
+</body>
+</html>
