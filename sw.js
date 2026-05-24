@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jingyudao-v1';
+const CACHE_NAME = 'jingyudao-v2';
 const ASSETS = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', event => {
@@ -18,6 +18,18 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+
+  // 不拦截 Firebase / Google API 请求（Firestore 走 WebSocket 长连接）
+  if (
+    url.hostname.includes('firestore.googleapis.com') ||
+    url.hostname.includes('firebaseio.com') ||
+    url.hostname.includes('googleapis.com') ||
+    url.hostname.includes('gstatic.com')
+  ) {
+    return;
+  }
+
   event.respondWith(
     caches.open(CACHE_NAME).then(cache =>
       cache.match(event.request).then(cached => {

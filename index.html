@@ -490,11 +490,253 @@
   <div id="overlay-container"></div>
   <div id="toast-container" style="position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:300;" aria-live="polite" role="status"></div>
 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
   <script>
     // ===== Service Worker Registration =====
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
+
+    // ===== Firebase Config =====
+    // 替换为你的 Firebase 配置 (Firebase Console → 项目设置 → 您的应用 → 配置)
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyA_Gv0jOvuchtp9kNYpjIt8ky0K8MIqp7s",
+      authDomain: "jingyudao.firebaseapp.com",
+      projectId: "jingyudao",
+      storageBucket: "jingyudao.firebasestorage.app",
+      messagingSenderId: "91055281112",
+      appId: "1:91055281112:web:8617a8d0bcf3e0118918ad"
+    };
+
+    let fb = null;
+    let db = null;
+    let _unsubNotes = null;
+    let _unsubAnniversaries = null;
+
+    // ===== SyncStore =====
+    const SyncStore = {
+      _roomCode: null,
+      _notesCache: null,
+      _anniversariesCache: null,
+      _initialized: false,
+      _initError: null,
+
+      getRoomCode() {
+        if (this._roomCode) return this._roomCode;
+        var settings = DataStore.getSettings();
+        this._roomCode = settings.roomCode || null;
+        return this._roomCode;
+      },
+
+      setRoomCode(code) {
+        this._roomCode = code;
+        DataStore.saveSettings({ roomCode: code });
+      },
+
+      isPaired() {
+        return !!this.getRoomCode();
+      },
+
+      initFirebase() {
+        if (this._initialized) return;
+        try {
+          if (!fb) fb = firebase.initializeApp(FIREBASE_CONFIG);
+          if (!db) {
+            db = firebase.firestore();
+            db.enablePersistence({ synchronizeTabs: true }).catch(function(err) {
+              if (err.code === 'failed-precondition') {
+                console.warn('SyncStore: multiple tabs open, offline persistence limited');
+              } else if (err.code === 'unimplemented') {
+                console.warn('SyncStore: browser does not support offline persistence');
+              }
+            });
+          }
+          this._initialized = true;
+          this._initError = null;
+        } catch (e) {
+          this._initError = e.message;
+          console.error('SyncStore: Firebase init failed', e);
+        }
+      },
+
+      _notesRef() {
+        if (!this.getRoomCode()) return null;
+        return db.collection('rooms').doc(this.getRoomCode()).collection('notes');
+      },
+
+      getNotes() {
+        return this._notesCache || [];
+      },
+
+      subscribeNotes() {
+        if (!this.isPaired() || !db) return;
+        var ref = this._notesRef();
+        if (!ref) return;
+        if (_unsubNotes) { _unsubNotes(); _unsubNotes = null; }
+
+        _unsubNotes = ref.orderBy('createdAt', 'desc').onSnapshot(
+          function(snapshot) {
+            SyncStore._notesCache = [];
+            snapshot.forEach(function(doc) {
+              SyncStore._notesCache.push(doc.data());
+            });
+            if (App.currentPage === 'home' || App.currentPage === 'us') {
+              App.render();
+            }
+          },
+          function(error) {
+            console.error('SyncStore: notes subscription error', error);
+          }
+        );
+      },
+
+      addNote(note) {
+        if (!this.isPaired() || !db) {
+          this._localAddNote(note);
+          return;
+        }
+        var ref = this._notesRef();
+        if (!ref) return;
+        note.id = uid();
+        note.createdAt = firebase.firestore.Timestamp.now();
+        ref.doc(note.id).set(note).catch(function(e) {
+          console.error('SyncStore: addNote failed', e);
+          App.showToast('纸条同步失败，请检查网络');
+        });
+      },
+
+      updateNote(id, updates) {
+        if (!this.isPaired() || !db) {
+          this._localUpdateNote(id, updates);
+          return;
+        }
+        var ref = this._notesRef();
+        if (!ref) return;
+        ref.doc(id).update(updates).catch(function(e) {
+          console.error('SyncStore: updateNote failed', e);
+        });
+      },
+
+      _localAddNote(note) {
+        var notes = DataStore._get(STORE_KEYS.notes) || [];
+        note.id = uid();
+        note.createdAt = new Date().toISOString();
+        notes.unshift(note);
+        DataStore._set(STORE_KEYS.notes, notes);
+        return note;
+      },
+
+      _localUpdateNote(id, updates) {
+        var notes = DataStore._get(STORE_KEYS.notes) || [];
+        var i = notes.findIndex(function(n) { return n.id === id; });
+        if (i >= 0) { notes[i] = Object.assign({}, notes[i], updates); DataStore._set(STORE_KEYS.notes, notes); }
+      },
+
+      _anniversariesRef() {
+        if (!this.getRoomCode()) return null;
+        return db.collection('rooms').doc(this.getRoomCode()).collection('anniversaries');
+      },
+
+      getAnniversaries() {
+        return this._anniversariesCache || [];
+      },
+
+      subscribeAnniversaries() {
+        if (!this.isPaired() || !db) return;
+        var ref = this._anniversariesRef();
+        if (!ref) return;
+        if (_unsubAnniversaries) { _unsubAnniversaries(); _unsubAnniversaries = null; }
+
+        _unsubAnniversaries = ref.orderBy('createdAt', 'desc').onSnapshot(
+          function(snapshot) {
+            SyncStore._anniversariesCache = [];
+            snapshot.forEach(function(doc) {
+              SyncStore._anniversariesCache.push(doc.data());
+            });
+            if (App.currentPage === 'us') App.render();
+          },
+          function(error) {
+            console.error('SyncStore: anniversaries subscription error', error);
+          }
+        );
+      },
+
+      addAnniversary(a) {
+        if (!this.isPaired() || !db) {
+          this._localAddAnniversary(a);
+          return;
+        }
+        var ref = this._anniversariesRef();
+        if (!ref) return;
+        a.id = uid();
+        a.createdAt = firebase.firestore.Timestamp.now();
+        ref.doc(a.id).set(a).catch(function(e) {
+          console.error('SyncStore: addAnniversary failed', e);
+          App.showToast('纪念日同步失败');
+        });
+      },
+
+      deleteAnniversary(id) {
+        if (!this.isPaired() || !db) {
+          this._localDeleteAnniversary(id);
+          return;
+        }
+        var ref = this._anniversariesRef();
+        if (!ref) return;
+        ref.doc(id).delete().catch(function(e) {
+          console.error('SyncStore: deleteAnniversary failed', e);
+        });
+      },
+
+      _localAddAnniversary(a) {
+        var anns = DataStore._get(STORE_KEYS.anniversaries) || [];
+        a.id = uid();
+        anns.unshift(a);
+        DataStore._set(STORE_KEYS.anniversaries, anns);
+        return a;
+      },
+
+      _localDeleteAnniversary(id) {
+        var anns = (DataStore._get(STORE_KEYS.anniversaries) || []).filter(function(a) { return a.id !== id; });
+        DataStore._set(STORE_KEYS.anniversaries, anns);
+      },
+
+      migrateLocalToCloud() {
+        if (!this.isPaired() || !db) return;
+        var localNotes = DataStore._get(STORE_KEYS.notes) || [];
+        var localAnniversaries = DataStore._get(STORE_KEYS.anniversaries) || [];
+        var notesRef = this._notesRef();
+        var annRef = this._anniversariesRef();
+        if (!notesRef || !annRef) return;
+
+        localNotes.forEach(function(n) {
+          if (typeof n.createdAt === 'string') {
+            var doc = Object.assign({}, n);
+            doc.createdAt = firebase.firestore.Timestamp.fromDate(new Date(doc.createdAt));
+            notesRef.doc(doc.id).set(doc, { merge: true }).catch(function() {});
+          }
+        });
+
+        localAnniversaries.forEach(function(a) {
+          if (typeof a.createdAt === 'string') {
+            var doc = Object.assign({}, a);
+            doc.createdAt = firebase.firestore.Timestamp.fromDate(new Date(doc.createdAt || 0));
+            annRef.doc(doc.id).set(doc, { merge: true }).catch(function() {});
+          }
+        });
+      },
+
+      startSyncing() {
+        this.initFirebase();
+        if (!this.isPaired()) return;
+        this.migrateLocalToCloud();
+        this.subscribeNotes();
+        this.subscribeAnniversaries();
+      }
+    };
 
     // ===== DataStore =====
     const STORE_KEYS = {
@@ -528,10 +770,24 @@
       getSettings() { return this._get(STORE_KEYS.settings) || { nickname: '', onboarded: false, quickActions: ['scripts','commlog','lesson'] }; },
       saveSettings(s) { this._set(STORE_KEYS.settings, { ...this.getSettings(), ...s }); },
 
-      // Love notes — { id, from, content, image, date, reply }
-      getNotes() { return this._get(STORE_KEYS.notes) || []; },
-      addNote(note) { const notes = this.getNotes(); note.id = uid(); note.createdAt = new Date().toISOString(); notes.unshift(note); this._set(STORE_KEYS.notes, notes); return note; },
-      updateNote(id, updates) { const notes = this.getNotes(); const i = notes.findIndex(n => n.id === id); if (i >= 0) { notes[i] = { ...notes[i], ...updates }; this._set(STORE_KEYS.notes, notes); } },
+      // Love notes — { id, from, content, image, date, reply, createdAt }
+      // 已配对时走 Firestore 同步；未配对时走 localStorage
+      getNotes() {
+        if (SyncStore.isPaired()) return SyncStore.getNotes();
+        return this._get(STORE_KEYS.notes) || [];
+      },
+      addNote(note) {
+        if (SyncStore.isPaired()) { SyncStore.addNote(note); return note; }
+        const notes = this._get(STORE_KEYS.notes) || [];
+        note.id = uid(); note.createdAt = new Date().toISOString();
+        notes.unshift(note); this._set(STORE_KEYS.notes, notes); return note;
+      },
+      updateNote(id, updates) {
+        if (SyncStore.isPaired()) { SyncStore.updateNote(id, updates); return; }
+        const notes = this._get(STORE_KEYS.notes) || [];
+        const i = notes.findIndex(function(n) { return n.id === id; });
+        if (i >= 0) { notes[i] = Object.assign({}, notes[i], updates); this._set(STORE_KEYS.notes, notes); }
+      },
 
       // Moods — { date, mood, note }
       getMoods() { return this._get(STORE_KEYS.moods) || []; },
@@ -556,14 +812,28 @@
       deleteLessonNote(id) { const notes = this.getLessonNotes().filter(n => n.id !== id); this._set(STORE_KEYS.lessonNotes, notes); },
 
       // Anniversaries — { id, title, date, type }
-      getAnniversaries() { return this._get(STORE_KEYS.anniversaries) || []; },
-      addAnniversary(a) { const anns = this.getAnniversaries(); a.id = uid(); anns.unshift(a); this._set(STORE_KEYS.anniversaries, anns); return a; },
-      deleteAnniversary(id) { const anns = this.getAnniversaries().filter(a => a.id !== id); this._set(STORE_KEYS.anniversaries, anns); },
+      // 已配对时走 Firestore 同步；未配对时走 localStorage
+      getAnniversaries() {
+        if (SyncStore.isPaired()) return SyncStore.getAnniversaries();
+        return this._get(STORE_KEYS.anniversaries) || [];
+      },
+      addAnniversary(a) {
+        if (SyncStore.isPaired()) { SyncStore.addAnniversary(a); return a; }
+        const anns = this._get(STORE_KEYS.anniversaries) || [];
+        a.id = uid(); anns.unshift(a); this._set(STORE_KEYS.anniversaries, anns); return a;
+      },
+      deleteAnniversary(id) {
+        if (SyncStore.isPaired()) { SyncStore.deleteAnniversary(id); return; }
+        const anns = (this._get(STORE_KEYS.anniversaries) || []).filter(function(a) { return a.id !== id; });
+        this._set(STORE_KEYS.anniversaries, anns);
+      },
 
       // Export / Import
       exportAll() {
         const data = {};
         for (const [k, key] of Object.entries(STORE_KEYS)) { data[k] = this._get(key); }
+        // 导出时保留房间码，用于换机后恢复配对
+        data._roomCode = SyncStore.getRoomCode() || null;
         return JSON.stringify(data, null, 2);
       },
       importAll(json) {
@@ -573,6 +843,11 @@
           this._set('jd_backup', this.exportAll());
           for (const [k, key] of Object.entries(STORE_KEYS)) {
             if (data[k] !== undefined) this._set(key, data[k]);
+          }
+          // 恢复房间码并重新同步
+          if (data._roomCode) {
+            SyncStore.setRoomCode(data._roomCode);
+            SyncStore.startSyncing();
           }
           return true;
         } catch { return false; }
@@ -681,12 +956,21 @@
           const btn = e.target.closest('.tab-btn');
           if (btn) App.navigate(btn.dataset.page);
         });
+
+        // 初始化 Firebase (无论是否配对都调用，启用离线缓存)
+        SyncStore.initFirebase();
+
         // Check onboarding
         const settings = DataStore.getSettings();
         if (!settings.onboarded) {
           App.showOnboarding();
         } else {
           App.navigate('home');
+        }
+
+        // 如果已配对，启动 Firestore 同步
+        if (SyncStore.isPaired()) {
+          SyncStore.startSyncing();
         }
 
         // PWA install prompt (after 30 seconds, once)
@@ -1061,6 +1345,7 @@
             <div style="margin-bottom:8px;">
               <label style="font-size:var(--font-sm);color:var(--color-text-secondary);">附图（可选）：</label>
               <input type="file" accept="image/*" id="delivery-image" style="display:block;margin-top:4px;font-size:var(--font-sm);" onchange="App._previewDeliveryImage()">
+              <div style="font-size:11px;color:var(--color-text-light);margin-top:2px;">建议图片小于 500KB，大图会自动压缩</div>
             </div>
             <div id="delivery-preview" style="margin-bottom:12px;"></div>
             <button class="btn btn-primary btn-block" id="deliver-btn">投递纸条 💌</button>
@@ -1145,6 +1430,30 @@
             <div class="divider"></div>
 
             <div style="margin-bottom:16px;">
+              <div style="font-size:var(--font-sm);font-weight:500;margin-bottom:8px;">🔗 双设备同步</div>
+              ${SyncStore.isPaired() ? `
+                <div style="background:var(--color-hover);padding:12px;border-radius:8px;margin-bottom:8px;">
+                  <div style="font-size:var(--font-xs);color:var(--color-text-secondary);">房间码</div>
+                  <div style="font-size:var(--font-xl);font-weight:700;letter-spacing:4px;color:var(--color-primary);">${esc(SyncStore.getRoomCode())}</div>
+                </div>
+                <div style="font-size:var(--font-xs);color:var(--color-text-light);margin-bottom:8px;">
+                  让对方在设置中输入此房间码即可配对
+                </div>
+                <button class="btn btn-ghost btn-block btn-sm" id="unpair-btn" style="color:var(--color-accent);">解除配对</button>
+              ` : `
+                <div style="margin-bottom:8px;">
+                  <button class="btn btn-primary btn-block btn-sm" id="create-room-btn">创建房间</button>
+                </div>
+                <div style="margin-bottom:8px;">
+                  <input id="join-room-input" class="input" placeholder="输入对方的 6 位房间码" maxlength="6" style="text-align:center;font-size:var(--font-lg);letter-spacing:4px;">
+                </div>
+                <button class="btn btn-outline btn-block btn-sm" id="join-room-btn">加入房间</button>
+              `}
+            </div>
+
+            <div class="divider"></div>
+
+            <div style="margin-bottom:16px;">
               <div style="font-size:var(--font-sm);font-weight:500;margin-bottom:8px;">💾 数据备份</div>
               <button class="btn btn-outline btn-block btn-sm" onclick="App.exportData()">导出数据 (JSON)</button>
               <div style="margin-top:8px;">
@@ -1174,6 +1483,53 @@
           App.render();
           App.showToast('昵称已更新 ✓');
         });
+
+        // 配对按钮 (仅在未配对时存在)
+        var createRoomBtn = document.getElementById('create-room-btn');
+        var joinRoomBtn = document.getElementById('join-room-btn');
+        var unpairBtn = document.getElementById('unpair-btn');
+
+        if (createRoomBtn) {
+          createRoomBtn.addEventListener('click', function() {
+            var code = String(Math.floor(100000 + Math.random() * 900000));
+            SyncStore.setRoomCode(code);
+            SyncStore.startSyncing();
+            App.closeOverlay();
+            App.showToast('房间已创建: ' + code + '  告诉对方这个码');
+            App.render();
+          });
+        }
+
+        if (joinRoomBtn) {
+          joinRoomBtn.addEventListener('click', function() {
+            var input = document.getElementById('join-room-input');
+            var code = input.value.trim();
+            if (code.length !== 6 || !/^\d{6}$/.test(code)) {
+              App.showToast('请输入 6 位数字房间码');
+              return;
+            }
+            SyncStore.setRoomCode(code);
+            SyncStore.startSyncing();
+            App.closeOverlay();
+            App.showToast('已加入房间 ' + code + '  纸条和纪念日现在会同步了');
+            App.render();
+          });
+        }
+
+        if (unpairBtn) {
+          unpairBtn.addEventListener('click', function() {
+            if (confirm('解除配对后，纸条和纪念日将不再同步。确定解除？')) {
+              if (_unsubNotes) { _unsubNotes(); _unsubNotes = null; }
+              if (_unsubAnniversaries) { _unsubAnniversaries(); _unsubAnniversaries = null; }
+              SyncStore.setRoomCode(null);
+              SyncStore._notesCache = null;
+              SyncStore._anniversariesCache = null;
+              App.closeOverlay();
+              App.showToast('已解除配对');
+              App.render();
+            }
+          });
+        }
       },
 
       exportData() {
